@@ -56,3 +56,25 @@
 # 원하는 revision을 명시하면, 해당 revision으로 롤백합니다.
 >> kubectl rollout undo deploy http-go --to-revision=1
 ```
+
+## 네임스페이스
+
+```bash
+# namespace를 생성하는 yaml 파일 내용을 보여줍니다.
+>> kubectl create ns peter --dry-run=client -o yaml
+
+# namespace를 생성하는 yaml 파일을 생성합니다.
+>> kubectl create ns peter --dry-run=client -o yaml > peter-ns.yaml
+
+# 'peter' 네임스페이스에 nginx deployment를 생성합니다.
+>> kubectl create deploy nginx --image nginx -n peter
+
+# 'peter' 네임스페이스에 생성된 자원을 보고싶으면 아래와 같이 명령어를 실행합니다.
+>> kubectl get all -n peter
+
+# 'peter' 네임스페이스를 삭제합니다. => 'peter' 네임스페이스에 있었던 모든 자원이 삭제됩니다.
+>> kubectl delete ns peter
+
+# dns가 어느 네임스페이스에 속해 있는지 알아내기!
+>> kubectl get pod --all-namespaces | grep dns
+```
