@@ -78,3 +78,66 @@
 # dns가 어느 네임스페이스에 속해 있는지 알아내기!
 >> kubectl get pod --all-namespaces | grep dns
 ```
+
+## 서비스
+
+* ClusterIP : 내부 자원끼리 서로 통신하기 위한 IP
+* sessionAffinity : 사용자가 서비스를 통해 특정 pod에 접속했을 때, 그 session을 유지해줍니다. (로그인 서비스 등을 제공하기 위해서는 이 설정이 필요합니다.)
+```bash
+# 서비스의 sessionAffinity 테스트를 위해 yaml 파일을 하나 생성합니다.
+>> kubectl create deploy http-go --image=gasbugs/http-go --dry-run=client -o yaml > http-go-deploy.yaml
+```
+
+```bash
+# 파일을 편집하여 Service 부분을 아래와 같이 추가합니다.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-go-svc
+spec:
+  selector:
+    app: http-go
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: http-go
+  name: http-go
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-go
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: http-go
+    spec:
+      containers:
+      - image: gasbugs/http-go
+        name: http-go
+        resources: {}
+status: {}
+```
+
+```bash
+# 서비스와 Deployment가 정의된 yaml 파일로 서비스를 띄웁니다.
+>> kubectl create -f http-go-deploy.yaml
+
+# 서비스의 sessionAffinity를 ClientIP로 수정하면 로드벨런싱 되지 않고 하나의 pod에 계속 접속됩니다.
+>> kubectl edit svc http-go-svc
+
+# 간단하게 pod 하나 띄워서 접속 테스트를 해볼 수 있습니다.
+>> kubectl run -it --rm --image=busybox bash
+/# wget -O- -q 10.36.15.109:80
+=> sessionAffinity를 ClientIP로 설정했을 때는 단일 pod에 붙고, None으로 설정 한 경우에는 여러 pod으로 로드벨런싱 됨을 확인할 수 있습니다.
+```
