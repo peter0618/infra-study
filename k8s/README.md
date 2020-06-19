@@ -182,3 +182,35 @@ http-go-np.yaml
 # 위에서 알아낸 EXTERNAL-IP로 아래와 같이 curl로 어플리케이션에 접근할 수 있습니다.
 >> curl {EXTERNAL-IP}:30001
 ```
+
+#### 3) LoadBalancer
+
+NodePort는 Node의 EXTERNAL-IP의 일부 포트를 열어서 pod에 접근하도록 하는 방법입니다.
+이는 사용에 제한이 많기 때문에, 이 보다는 LoadBalancer 사용을 권장한다고 합니다.
+LoadBalancer yaml 파일을 아래와 같이 작성합니다.
+
+```bash
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-go-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: http-go
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+```
+http-go-lb.yaml
+
+```bash
+# 서비스를 띄웁니다.
+>> kubectl create -f http-go-lb.yaml
+
+# 아래 명령어로 로드벨런서 서비스를 확인해보면 EXTERNAL-IP 가 부여된 것을 확인할 수 있습니다.
+# (처음엔 pending 상태였다가 시간이 지나면 바뀝니다.)
+# 포트번호도 랜덤하게 부여되지만 우리는 그냥 서비스 포트 번호로 접속하면 됩니다.
+>> kubectl get svc
+```
